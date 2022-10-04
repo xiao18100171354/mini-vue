@@ -7,11 +7,15 @@ describe("readonly", () => {
     const wrapped = readonly(original);
     expect(wrapped).not.toBe(original);
     expect(wrapped.foo).toBe(1);
+
+    // test readonly
     expect(isReadonly(wrapped)).toBe(true);
 
+    // test readonly 对象嵌套
     expect(isReadonly(wrapped.bar)).toBe(true);
     expect(isReadonly(original.bar)).toBe(false);
 
+    // test isProxy
     expect(isProxy(wrapped)).toBe(true);
   });
 
