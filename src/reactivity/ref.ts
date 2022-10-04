@@ -11,6 +11,7 @@ class RefImpl {
   private _value: any;
   public dep; // ref 中,一个key 必须对应一个 dep
   private _rawValue: any;
+  public __v_isRef = true; // 用于判断是否为 ref 对象,只要通过 RefImpl 创建的对象,就会含有 __v_isRef 属性,代表它是一个 ref 对象
   constructor(value) {
     this._rawValue = value;
     // 在 ref 实现中,如果 value 是一个对象, 则需要把 value 转换成 reactive
@@ -51,4 +52,14 @@ export function ref(value) {
   // return {
   //   value,
   // };
+}
+
+export function isRef(ref) {
+  return !!ref.__v_isRef;
+}
+
+export function unRef(ref) {
+  // 如果是 ref 对象,则返回 ref.value
+  // 不是 ref 对象则返回自身
+  return isRef(ref) ? ref.value : ref;
 }
