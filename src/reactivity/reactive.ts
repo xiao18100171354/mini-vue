@@ -1,4 +1,8 @@
-import { mutableHandlers, readonlyHandlers, shallowReadonlyHandlers } from "./baseHandlers";
+import {
+  mutableHandlers,
+  readonlyHandlers,
+  shallowReadonlyHandlers,
+} from "./baseHandlers";
 import { track, trigger } from "./effect";
 
 export const enum ReactiveFlags {
@@ -48,6 +52,10 @@ export function isReactive(value) {
 // 判断传入的参数是否为 readonly
 export function isReadonly(value) {
   return !!value[ReactiveFlags.IS_READONLY];
+}
+
+export function isProxy(value) {
+  return isReactive(value) || isReadonly(value);
 }
 
 function createActiveObject(raw: any, baseHandlers) {
