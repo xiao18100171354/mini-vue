@@ -4,7 +4,7 @@ let activeEffect; // 存储 effect
 let shouldTrack; // 判断当前是否应该收集依赖
 class ReactiveEffect {
   private _fn: any;
-  deps = []; // 
+  deps = []; //
   active = true;
   public scheduler: Function | undefined;
   onStop?: () => void;
@@ -46,7 +46,7 @@ function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
     dep.delete(effect);
   });
-  
+
   effect.deps.length = 0; // 属于优化操作,当 effect.deps 中的所有依赖被清除,effect.deps为 [set[0], set[0], set[0]], 此行为则可以释放内存空间.
 }
 
@@ -71,16 +71,21 @@ export function track(target, key) {
     depsMap.set(key, dep);
   }
 
+  trackEffects(dep);
+}
+
+// ! 依赖收集
+export function trackEffects(dep) {
   // 如果 activeEffect 已经被添加过，那么就无需再次添加
   if (dep.has(activeEffect)) return;
-  
+
   dep.add(activeEffect); // 依赖收集
 
   activeEffect.deps.push(dep); // 反向收集依赖,用于 stop 功能
 }
 
 // 当前是否正在收集依赖
-function isTracking () {
+export function isTracking() {
   // if (!activeEffect) return;
   // if (!shouldTrack) return;
   return shouldTrack && activeEffect !== undefined;
@@ -93,6 +98,10 @@ export function trigger(target, key) {
   // 2. 获取 key 对应的所有依赖 dep
   let dep = depsMap.get(key);
   // 3. 遍历执行依赖的 run 或 scheduler 函数，从而更新视图
+  triggerEffects(dep);
+}
+
+export function triggerEffects(dep) {
   for (const effect of dep) {
     if (effect.scheduler) {
       effect.scheduler();
