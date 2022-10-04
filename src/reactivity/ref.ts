@@ -63,3 +63,25 @@ export function unRef(ref) {
   // 不是 ref 对象则返回自身
   return isRef(ref) ? ref.value : ref;
 }
+
+export function proxyRefs(objectWithRef) {
+  return new Proxy(objectWithRef, {
+    get(target, key) {
+      // get -> age (ref) 那么就给他返回 .value
+      // not ref 则返回 -> value
+      return unRef(Reflect.get(target, key));
+    },
+    set(target, key, value) {
+      // set -> age (ref) 那么就要修改 .value
+
+      
+      if (isRef(target[key]) && !isRef(value)) {
+        // 判断之前 key 对应的值是 ref 对象,且新的value不是 ref 对象,则直接替换
+        return (target[key].value = value);
+      } else {
+        // 如果新的 value 是 ref 对象,那么无论之前 key 对应的值是不是 ref 对象,都可以直接赋值
+        return Reflect.set(target, key, value);
+      }
+    },
+  });
+}
