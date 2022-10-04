@@ -1,10 +1,10 @@
 import { extend } from "../shared";
 
-let activeEffect;
-let shouldTrack;
+let activeEffect; // 存储 effect
+let shouldTrack; // 判断当前是否应该收集依赖
 class ReactiveEffect {
   private _fn: any;
-  deps = [];
+  deps = []; // 
   active = true;
   public scheduler: Function | undefined;
   onStop?: () => void;
@@ -33,7 +33,7 @@ class ReactiveEffect {
 
   stop() {
     if (this.active) {
-      cleanupEffect(this);
+      cleanupEffect(this); // 清空依赖
       if (this.onStop) {
         this.onStop();
       }
@@ -46,7 +46,8 @@ function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
     dep.delete(effect);
   });
-  effect.deps.length = 0;
+  
+  effect.deps.length = 0; // 属于优化操作,当 effect.deps 中的所有依赖被清除,effect.deps为 [set[0], set[0], set[0]], 此行为则可以释放内存空间.
 }
 
 const targetMap = new Map();
@@ -73,14 +74,15 @@ export function track(target, key) {
   // 如果 activeEffect 已经被添加过，那么就无需再次添加
   if (dep.has(activeEffect)) return;
   
-  dep.add(activeEffect);
-  activeEffect.deps.push(dep);
+  dep.add(activeEffect); // 依赖收集
+
+  activeEffect.deps.push(dep); // 反向收集依赖,用于 stop 功能
 }
 
+// 当前是否正在收集依赖
 function isTracking () {
   // if (!activeEffect) return;
   // if (!shouldTrack) return;
-
   return shouldTrack && activeEffect !== undefined;
 }
 

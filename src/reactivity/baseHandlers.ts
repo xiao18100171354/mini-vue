@@ -10,6 +10,7 @@ const shallowReadonlyGet = createGetter(true, true);
 // ! 封装 getter 函数
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target, key) {
+    // ! isReactive() 功能实现 和 isReadonly() 功能实现
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
     } else if (key === ReactiveFlags.IS_READONLY) {
@@ -18,15 +19,18 @@ function createGetter(isReadonly = false, shallow = false) {
 
     const res = Reflect.get(target, key);
 
+    // ! shallowReadonly 功能实现
     if (shallow) {
       return res;
     }
 
+    // ! reactive 和 readonly 嵌套对象实现
     // 判断 res 是不是一个 object
     if (isObject(res)) {
       return isReadonly ? readonly(res) : reactive(res);
     }
 
+    // ! 使用 isReadonly 入参来判断是 reactive 还是 readonly
     if (!isReadonly) {
       // 如果不是 readonly
       // ! 依赖收集
