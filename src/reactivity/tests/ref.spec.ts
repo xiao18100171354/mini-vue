@@ -29,7 +29,7 @@ describe("ref", () => {
     expect(dummy).toBe(2);
   });
 
-  it.skip('should make nested properties reative', () => {
+  it('should make nested properties reative', () => {
     const a = ref({
       count: 1
     })

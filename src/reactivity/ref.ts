@@ -2,19 +2,20 @@ import { hasChanged, isObject } from "../shared";
 import { isTracking, trackEffects, triggerEffects } from "./effect";
 import { reactive } from "./reactive";
 
-/* 
-private _rawValue: any;
-this._rawValue = value;
-// 在 ref 实现中,如果 value 是一个对象, 则需要把 value 转换成 reactive
-// 1. 看看 value 是不是对象
-this._value = isObject(value) ? reactive(value) : value;
-*/
+// 1 true "1"
+// get set
+// proxy -> object
+// {} -> value get set
 
 class RefImpl {
   private _value: any;
-  public dep;
+  public dep; // ref 中,一个key 必须对应一个 dep
+  private _rawValue: any;
   constructor(value) {
-    this._value = value;
+    this._rawValue = value;
+    // 在 ref 实现中,如果 value 是一个对象, 则需要把 value 转换成 reactive
+    // 1. 看看 value 是不是对象
+    this._value = convert(value);
     this.dep = new Set();
   }
 
@@ -27,11 +28,16 @@ class RefImpl {
   set value(newValue) {
     // 新的值等于老的值,则不需要重新赋值,也就不需要重新触发依赖.
     // hasChanged
-    if (hasChanged(newValue, this._value)) {
-      this._value = newValue;
+    if (hasChanged(newValue, this._rawValue)) {
+      this._rawValue = newValue;
+      this._value = convert(newValue);
       triggerEffects(this.dep);
     }
   }
+}
+
+function convert(value) {
+  return isObject(value) ? reactive(value) : value;
 }
 
 function trachRefValue(ref) {
