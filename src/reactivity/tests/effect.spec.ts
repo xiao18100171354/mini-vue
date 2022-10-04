@@ -77,6 +77,12 @@ describe("effect", () => {
     expect(dummy).toBe(2);
     stop(runner);
     obj.prop = 3;
+    // set
+
+    // obj.prop = obj.prop + 1;
+    // 先 get ，再 set
+    // obj.prop++;
+
     expect(dummy).toBe(2);
 
     // stopped effect should still be manually callable：停止的 effect 仍应可以手动调用
