@@ -1,5 +1,7 @@
 import { extend } from "../shared";
 
+let activeEffect;
+let shouldTrack;
 class ReactiveEffect {
   private _fn: any;
   deps = [];
@@ -13,8 +15,20 @@ class ReactiveEffect {
   }
 
   run() {
+    // 1. 会收集依赖
+    //    shouldTrack 来做区分
+    if (!this.active) {
+      return this._fn();
+    }
+
+    shouldTrack = true;
     activeEffect = this;
-    return this._fn();
+
+    const result = this._fn();
+    // reset
+    shouldTrack = false;
+
+    return result;
   }
 
   stop() {
@@ -32,12 +46,15 @@ function cleanupEffect(effect) {
   effect.deps.forEach((dep: any) => {
     dep.delete(effect);
   });
+  effect.deps.length = 0;
 }
 
 const targetMap = new Map();
 
 // 依赖收集
 export function track(target, key) {
+  if (!isTracking()) return;
+
   // target -> key -> dep
   let depsMap = targetMap.get(target); // 从全局变量 targetMap 中获取 target 对应的值
   if (!depsMap) {
@@ -53,10 +70,18 @@ export function track(target, key) {
     depsMap.set(key, dep);
   }
 
-  if (!activeEffect) return;
-
+  // 如果 activeEffect 已经被添加过，那么就无需再次添加
+  if (dep.has(activeEffect)) return;
+  
   dep.add(activeEffect);
   activeEffect.deps.push(dep);
+}
+
+function isTracking () {
+  // if (!activeEffect) return;
+  // if (!shouldTrack) return;
+
+  return shouldTrack && activeEffect !== undefined;
 }
 
 // 触发依赖
@@ -74,8 +99,6 @@ export function trigger(target, key) {
     }
   }
 }
-
-let activeEffect;
 
 export function effect(fn, options: any = {}) {
   // fn
