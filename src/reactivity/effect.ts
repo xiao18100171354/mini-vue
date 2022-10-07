@@ -2,7 +2,7 @@ import { extend } from "../shared";
 
 let activeEffect; // 存储 effect
 let shouldTrack; // 判断当前是否应该收集依赖
-class ReactiveEffect {
+export class ReactiveEffect {
   private _fn: any;
   deps = []; //
   active = true; // 用 active 来判断是否已经调用过 stop(), true 则说明没有调用，反正则表示已经调用过，不需要再一次清空依赖了，属于优化的部分
