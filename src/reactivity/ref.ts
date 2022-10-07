@@ -2,15 +2,15 @@ import { hasChanged, isObject } from "../shared";
 import { isTracking, trackEffects, triggerEffects } from "./effect";
 import { reactive } from "./reactive";
 
-// 1 true "1"
-// get set
-// proxy -> object
-// {} -> value get set
+// 1 true "1" ref 接收的是基本数据类型
+// get set 但是 ref 仍要使用 get 和 set 进行依赖收集和触发依赖
+// proxy -> object proxy 接收的是一个对象，这样就无法对基本数据类型使用
+// {} -> value get set 所以要通过 RefImpl 将基本类型数据转换成对象的形式，变相实现基本数据类型的 get 和 set
 
 class RefImpl {
-  private _value: any;
+  private _value: any; // 存储 ref 接收基本数据类型的值
   public dep; // ref 中,一个key 必须对应一个 dep
-  private _rawValue: any;
+  private _rawValue: any; // 存储未处理过的value，用于 set 时的比较
   public __v_isRef = true; // 用于判断是否为 ref 对象,只要通过 RefImpl 创建的对象,就会含有 __v_isRef 属性,代表它是一个 ref 对象
   constructor(value) {
     this._rawValue = value;
@@ -22,7 +22,7 @@ class RefImpl {
 
   get value() {
     // 依赖收集
-    trachRefValue(this);
+    trackRefValue(this);
     return this._value;
   }
 
@@ -41,7 +41,7 @@ function convert(value) {
   return isObject(value) ? reactive(value) : value;
 }
 
-function trachRefValue(ref) {
+function trackRefValue(ref) {
   if (isTracking()) {
     trackEffects(ref.dep);
   }
