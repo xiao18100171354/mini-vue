@@ -18,9 +18,9 @@ export function setupComponent(instance) {
 }
 
 function setupStatusfulComponent(instance: any) {
-  const component = instance.type;
+  const Component = instance.type;
 
-  const { setup } = component;
+  const { setup } = Component;
 
   if (setup) {
     // setup() 可以返回一个 function 或 object
@@ -34,6 +34,8 @@ function setupStatusfulComponent(instance: any) {
 function handleSetupResult(instance, setupResult: any) {
   // 基于上述 setup() 可以返回 function 或 object 进行一个判断
   // TODO function
+
+
   if (typeof setupResult === "object") {
     // 把 setup() 返回的值赋值到组件实例上
     instance.setupStatus = setupResult;
@@ -44,9 +46,9 @@ function handleSetupResult(instance, setupResult: any) {
 }
 
 function finishComponentSetup(instance) {
-  const component = instance.type;
+  const Component = instance.type;
 
-  if (!component.render) {
-    instance.render = component.render
+  if (Component.render) {
+    instance.render = Component.render
   }
 }
