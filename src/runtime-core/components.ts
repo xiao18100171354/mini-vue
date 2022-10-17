@@ -35,12 +35,10 @@ function handleSetupResult(instance, setupResult: any) {
   // 基于上述 setup() 可以返回 function 或 object 进行一个判断
   // TODO function
 
-
   if (typeof setupResult === "object") {
     // 把 setup() 返回的值赋值到组件实例上
     instance.setupStatus = setupResult;
   }
-
 
   finishComponentSetup(instance);
 }
@@ -48,7 +46,7 @@ function handleSetupResult(instance, setupResult: any) {
 function finishComponentSetup(instance) {
   const Component = instance.type;
 
-  if (Component.render) {
-    instance.render = Component.render
-  }
+  // if (Component.render) {
+    instance.render = Component.render;
+  // }
 }

@@ -1,8 +1,8 @@
-
-
+import { createApp } from "../../lib/guide-mini-vue.esm.js";
 
 // vue3
 
-import App from './App.js';
+import App from "./App.js";
 
-createApp(App).mount("#app");
+const rootComponent = document.querySelector("#app");
+createApp(App).mount(rootComponent);

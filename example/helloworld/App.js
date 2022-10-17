@@ -1,3 +1,5 @@
+import { h } from "../../lib/guide-mini-vue.esm.js";
+
 export default {
   // <template></template> 需要编译能力
   // render
