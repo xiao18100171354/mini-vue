@@ -64,7 +64,8 @@ function mountComponent(vnode: any, container) {
 }
 
 function setupRenderEffect(instance: any, container) {
-  const subTree = instance.render(); // subTree 是虚拟节点树
+  const { proxy } = instance;
+  const subTree = instance.render.call(proxy); // subTree 是虚拟节点树
   // vnode -> patch()
   // vnode element -> mountElement();
 

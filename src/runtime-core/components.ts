@@ -2,6 +2,7 @@ export function createComponentInstance(vnode) {
   const component = {
     vnode,
     type: vnode.type,
+    setupStatus: {},
   };
 
   return component;
@@ -20,6 +21,16 @@ export function setupComponent(instance) {
 function setupStatusfulComponent(instance: any) {
   const Component = instance.type;
 
+  instance.proxy = new Proxy({}, {
+    get(target, key) {
+      // setupStatus
+      const { setupStatus }  = instance;
+      if (key in setupStatus) {
+        return setupStatus[key];
+      }
+    }
+  })
+
   const { setup } = Component;
 
   if (setup) {
@@ -31,6 +42,7 @@ function setupStatusfulComponent(instance: any) {
     handleSetupResult(instance, setupResult);
   }
 }
+
 function handleSetupResult(instance, setupResult: any) {
   // 基于上述 setup() 可以返回 function 或 object 进行一个判断
   // TODO function
