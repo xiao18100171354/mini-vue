@@ -1,5 +1,5 @@
 import { isObject } from "../shared";
-import { createComponentInstance, setupComponent } from "./components";
+import { createComponentInstance, setupComponent } from "./component";
 
 export function render(vnode, container) {
   // render 函数其实就干了一件事情，就是调用 patch() 方法
@@ -28,6 +28,7 @@ function processElement(vnode: any, container: any) {
 function mountElement(vnode: any, container: any) {
   const { children, props, type } = vnode;
   const el = document.createElement(type);
+  vnode.el = el;
 
   // children 可能是 string 或 array
   if (typeof children === "string") {
@@ -56,18 +57,22 @@ function processComponent(vnode: any, container: any) {
   mountComponent(vnode, container);
 }
 
-function mountComponent(vnode: any, container) {
+function mountComponent(initialVNode: any, container) {
   // 1. 创建组件实例
-  const instance = createComponentInstance(vnode);
+  const instance = createComponentInstance(initialVNode);
   setupComponent(instance);
-  setupRenderEffect(instance, container);
+  setupRenderEffect(instance, initialVNode, container);
 }
 
-function setupRenderEffect(instance: any, container) {
+function setupRenderEffect(instance: any, initialVNode, container) {
   const { proxy } = instance;
   const subTree = instance.render.call(proxy); // subTree 是虚拟节点树
   // vnode -> patch()
   // vnode element -> mountElement();
 
   patch(subTree, container);
+
+  // 所有的 element 都已经处理完成
+
+  initialVNode.el = subTree.el;
 }

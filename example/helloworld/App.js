@@ -1,10 +1,12 @@
 import { h } from "../../lib/guide-mini-vue.esm.js";
 
+window.self = null;
 export default {
   // <template></template> 需要编译能力
   // render
 
   render() {
+    window.self = this;
     // ui
     return h(
       "div",
