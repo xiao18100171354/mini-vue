@@ -1,4 +1,5 @@
 import { isObject } from "../shared";
+import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 
 export function render(vnode, container) {
@@ -9,13 +10,27 @@ export function render(vnode, container) {
 }
 
 function patch(vnode, container) {
-  console.log(vnode.type);
+  // ShapeFlags
+  // vnode -> flag
+  const { shapeFlags } = vnode;
+
   // 判断 vnode 是不是 element 类型
   // 是 element 那么就应该处理 element
-  if (typeof vnode.type === "string") {
+  // if (typeof vnode.type === "string") {
+  //   // ELEMENT
+  //   processElement(vnode, container);
+  // } else if (isObject(vnode.type)) {
+  //   // } else if (isObject(vnode.type)) {
+  //   // STATEFUL_COMPONENT
+  //   // 去处理组件
+  //   processComponent(vnode, container);
+  // }
+
+
+  // 通过 ShapeFlags 改在判断代码
+  if (shapeFlags & ShapeFlags.ELEMENT) {
     processElement(vnode, container);
-  } else if (isObject(vnode.type)) {
-    // 去处理组件
+  } else if (shapeFlags & ShapeFlags.STATEFUL_COMPONENT) {
     processComponent(vnode, container);
   }
 }
@@ -26,18 +41,28 @@ function processElement(vnode: any, container: any) {
 
 // 处理元素
 function mountElement(vnode: any, container: any) {
-  const { children, props, type } = vnode;
+  const { children, props, type, shapeFlags } = vnode;
   const el = document.createElement(type);
   vnode.el = el;
 
   // children 可能是 string 或 array
-  if (typeof children === "string") {
+  // text_children
+  // if (typeof children === "string") {
+  //   el.textContent = children;
+  // } else if (Array.isArray(children)) {
+  //   // array_children
+  //   // children 中的每一项也都是通过 h() 返回的 vnode，则递归调用
+  //   mountChildren(children, el);
+  // }
+
+  // 通过 ShapeFlags 改在判断代码
+  if (shapeFlags & ShapeFlags.TEXT_CHILDREN) {
     el.textContent = children;
-  } else if (Array.isArray(children)) {
-    // children 中的每一项也都是通过 h() 返回的 vnode
+  } else if (shapeFlags & ShapeFlags.ARRAY_CHILDREN) {
     mountChildren(children, el);
   }
 
+  // 处理属性
   for (const k in props) {
     el.setAttribute(k, props[k]);
   }
