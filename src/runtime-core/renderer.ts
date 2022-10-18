@@ -96,7 +96,9 @@ function processComponent(vnode: any, container: any) {
 function mountComponent(initialVNode: any, container) {
   // 1. 创建组件实例
   const instance = createComponentInstance(initialVNode);
+  // 2. 
   setupComponent(instance);
+  // 3. 
   setupRenderEffect(instance, initialVNode, container);
 }
 

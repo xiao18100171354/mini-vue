@@ -1,3 +1,4 @@
+import { initProps } from "./componentProps";
 import { PublicInstanceProxyHandlers } from "./componentPublicInstace";
 
 export function createComponentInstance(vnode) {
@@ -5,6 +6,7 @@ export function createComponentInstance(vnode) {
     vnode,
     type: vnode.type,
     setupStatus: {},
+    props: {},
   };
 
   return component;
@@ -12,7 +14,7 @@ export function createComponentInstance(vnode) {
 
 export function setupComponent(instance) {
   // todo 1. initProps() 初始化 props
-  // initProps();
+  initProps(instance, instance.vnode.props);
   // todo 2. initSlots() 初始化 slots
   // initSlots();
 
@@ -31,7 +33,7 @@ function setupStatusfulComponent(instance: any) {
     // setup() 可以返回一个 function 或 object
     // 如果返回的是一个 function,那么我们这边就默认这个 function 是 render 函数
     // 如果是一个 object ,那么把这个 object 注入组件上下文
-    const setupResult = setup();
+    const setupResult = setup(instance.props);
 
     handleSetupResult(instance, setupResult);
   }
