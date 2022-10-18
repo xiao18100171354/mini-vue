@@ -65,7 +65,6 @@ function mountElement(vnode: any, container: any) {
   // 处理属性
   for (const key in props) {
     const val = props[key];
-    console.log(key)
     // 先显示具体的 click，再去通用化
     // on + Event namae
     // onMousedown
