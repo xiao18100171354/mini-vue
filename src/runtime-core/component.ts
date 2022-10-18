@@ -1,3 +1,4 @@
+import { shallowReadonly } from "../reactivity/reactive";
 import { initProps } from "./componentProps";
 import { PublicInstanceProxyHandlers } from "./componentPublicInstace";
 
@@ -25,7 +26,7 @@ export function setupComponent(instance) {
 function setupStatusfulComponent(instance: any) {
   const Component = instance.type;
 
-  instance.proxy = new Proxy({_: instance}, PublicInstanceProxyHandlers)
+  instance.proxy = new Proxy({ _: instance }, PublicInstanceProxyHandlers);
 
   const { setup } = Component;
 
@@ -33,7 +34,7 @@ function setupStatusfulComponent(instance: any) {
     // setup() 可以返回一个 function 或 object
     // 如果返回的是一个 function,那么我们这边就默认这个 function 是 render 函数
     // 如果是一个 object ,那么把这个 object 注入组件上下文
-    const setupResult = setup(instance.props);
+    const setupResult = setup(shallowReadonly(instance.props));
 
     handleSetupResult(instance, setupResult);
   }
@@ -55,6 +56,6 @@ function finishComponentSetup(instance) {
   const Component = instance.type;
 
   // if (Component.render) {
-    instance.render = Component.render;
+  instance.render = Component.render;
   // }
 }
