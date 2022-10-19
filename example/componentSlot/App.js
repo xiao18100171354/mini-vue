@@ -1,4 +1,4 @@
-import { h } from "../../lib/guide-mini-vue.esm.js";
+import { h, createTextVNode } from "../../lib/guide-mini-vue.esm.js";
 import { Foo } from "./Foo.js";
 
 export default {
@@ -28,7 +28,10 @@ export default {
       Foo,
       {},
       {
-        header: (props) => h("p", {}, "header" + props.age),
+        header: (props) => [
+          h("p", {}, "header" + props.age),
+          createTextVNode("你好啊"),
+        ],
         footer: (props) => h("p", {}, "footer"),
       }
     );
