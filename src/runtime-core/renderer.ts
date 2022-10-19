@@ -135,7 +135,6 @@ function setupRenderEffect(instance: any, initialVNode, container) {
   // vnode -> patch()
   // vnode element -> mountElement();
 
-  debugger;
   patch(subTree, container);
 
   // 所有的 element 都已经处理完成
