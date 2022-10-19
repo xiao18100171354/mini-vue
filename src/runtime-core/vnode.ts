@@ -8,11 +8,17 @@ export function createVNode(type, props?, children?) {
     shapeFlags: getShapeFlag(type),
     el: null,
   };
-
+  
   if (typeof children === "string") {
     vnode.shapeFlags = vnode.shapeFlags | ShapeFlags.TEXT_CHILDREN;
   } else if (Array.isArray(children)) {
     vnode.shapeFlags = vnode.shapeFlags | ShapeFlags.ARRAY_CHILDREN;
+  }
+
+  if (vnode.shapeFlags & ShapeFlags.STATEFUL_COMPONENT) {
+    if (typeof children === "object") {
+      vnode.shapeFlags = vnode.shapeFlags | ShapeFlags.SLOT_CHILDREN;
+    }
   }
 
   return vnode;
