@@ -5,10 +5,10 @@ export function initSlots(instance, children) {
   // instance.slots = Array.isArray(children) ? children : [children];
 
   // normalizeObjectSlot(children, instance.slots);
-  
+
   const { vnode } = instance;
   if (vnode.shapeFlags & ShapeFlags.SLOT_CHILDREN) {
-    normalizeObjectSlot(children, instance.slots);
+    instance.slots = normalizeObjectSlot(children);
   }
 }
 
@@ -16,11 +16,13 @@ function normalizeSlotValue(value) {
   return Array.isArray(value) ? value : [value];
 }
 
-function normalizeObjectSlot(children, slots) {
+function normalizeObjectSlot(children) {
   // children -> object
 
+  const slots = {};
   for (const key in children) {
     const value = children[key];
     slots[key] = (props) => normalizeSlotValue(value(props));
   }
+  return slots;
 }

@@ -11,6 +11,7 @@ export function render(vnode, container) {
 }
 
 function patch(vnode, container) {
+  debugger
   // ShapeFlags
   // vnode -> flag
   const { type, shapeFlags } = vnode;
@@ -27,21 +28,25 @@ function patch(vnode, container) {
   //   processComponent(vnode, container);
   // }
 
-  // Fragment 类型 -> 只渲染 children
+  // 根据 type 来选择对应处理 vnode 的方法
   switch (type) {
     case Fragment:
+      // Fragment 类型 -> 只需要渲染 children 即可
       processFragment(vnode, container);
       break;
 
     case Text:
+      // 纯文本类型 -> 只需要将文本添加到容器中即可
       processText(vnode, container);
       break;
 
     default:
       // 通过 ShapeFlags 改在判断代码
-      if (shapeFlags & ShapeFlags.ELEMENT) {
+      if (shapeFlags & ShapeFlags.ELEMENT) {  
+        // type => div p span 等等 html 标签
         processElement(vnode, container);
       } else if (shapeFlags & ShapeFlags.STATEFUL_COMPONENT) {
+        // type => 组件类型, App Foo 等
         processComponent(vnode, container);
       }
       break;
@@ -121,20 +126,24 @@ function processComponent(vnode: any, container: any) {
 }
 
 function mountComponent(initialVNode: any, container) {
-  // 1. 创建组件实例
+  // 1. 创建组件实例, 为组件实例声明 setupStatus，props，slots，emit 等属性
   const instance = createComponentInstance(initialVNode);
-  // 2. 处理组件实例
+  // 2. 处理组件实例，初始化组件的 props slots setupStatus
   setupComponent(instance);
   // 3.
   setupRenderEffect(instance, initialVNode, container);
 }
 
 function setupRenderEffect(instance: any, initialVNode, container) {
+  // 在 setupStatusfulComponent() 执行时，会对组件 setup 函数返回的对象进行 Proxy 代理，并且添加到组件实例instance的proxy属性
   const { proxy } = instance;
+  // 准备就绪，调用实例instance的render函数，也就是组件的render函数，并且直接绑定render函数的this指向上述的代理对象（这样就可以通过 this 访问 setup 函数返回对象的属性和属性值）
   const subTree = instance.render.call(proxy); // subTree 是虚拟节点树
+  console.log("subTree", subTree);
   // vnode -> patch()
   // vnode element -> mountElement();
 
+  console.log("container", container);
   patch(subTree, container);
 
   // 所有的 element 都已经处理完成

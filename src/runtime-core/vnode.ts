@@ -8,10 +8,12 @@ export function createVNode(type, props?, children?) {
     type,
     props,
     children,
-    shapeFlags: getShapeFlag(type),
-    el: null,
+    shapeFlags: getShapeFlag(type), // 用来判断组件是什么类型
+    el: null, // 组件的元素
   };
   
+
+  // 额外处理 vnode 的类型
   if (typeof children === "string") {
     vnode.shapeFlags = vnode.shapeFlags | ShapeFlags.TEXT_CHILDREN;
   } else if (Array.isArray(children)) {
