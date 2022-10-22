@@ -9,8 +9,8 @@ import { reactive } from "./reactive";
 
 class RefImpl {
   private _value: any; // 存储 ref 接收基本数据类型的值
-  public dep; // ref 中,一个key 必须对应一个 dep
-  private _rawValue: any; // 存储未处理过的value，用于 set 时的比较
+  public dep; // 用于存放依赖：ref 中,一个 key 必须对应一个 dep
+  private _rawValue: any; // 存储未处理过的 value，用于 set 时的比较
   public __v_isRef = true; // 用于判断是否为 ref 对象,只要通过 RefImpl 创建的对象,就会含有 __v_isRef 属性,代表它是一个 ref 对象
   constructor(value) {
     this._rawValue = value;
@@ -49,6 +49,7 @@ function trackRefValue(ref) {
 
 export function ref(value) {
   return new RefImpl(value);
+  // const a = ref(1) -> a.value
   // return {
   //   value,
   // };

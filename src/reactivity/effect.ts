@@ -1,10 +1,10 @@
 import { extend } from "../shared";
 
-let activeEffect; // 存储 effect
+let activeEffect; // 存储 effect -> fn
 let shouldTrack; // 判断当前是否应该收集依赖
 export class ReactiveEffect {
   private _fn: any;
-  deps = []; //
+  deps = []; // 反向收集依赖,用于 stop 功能
   active = true; // 用 active 来判断是否已经调用过 stop(), true 则说明没有调用，反正则表示已经调用过，不需要再一次清空依赖了，属于优化的部分
   public scheduler: Function | undefined;
   onStop?: () => void;
@@ -21,10 +21,13 @@ export class ReactiveEffect {
       return this._fn();
     }
 
+    // 应该进行依赖收集
     shouldTrack = true;
+    // 把当前的 this -> fn 赋值给 activeEffect
     activeEffect = this;
 
     const result = this._fn();
+
     // reset
     shouldTrack = false;
 
@@ -79,9 +82,11 @@ export function trackEffects(dep) {
   // 如果 activeEffect 已经被添加过，那么就无需再次添加
   if (dep.has(activeEffect)) return;
 
-  dep.add(activeEffect); // 依赖收集
+  // 把 effect 添加到 dep 里实现依赖收集，那么到这一步就已经结束了依赖收集的动作
+  dep.add(activeEffect); 
 
-  activeEffect.deps.push(dep); // 反向收集依赖,用于 stop 功能
+  // 这里是反向收集依赖,用于 stop 功能
+  activeEffect.deps.push(dep);
 }
 
 // 当前是否正在收集依赖

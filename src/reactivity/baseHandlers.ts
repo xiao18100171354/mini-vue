@@ -25,12 +25,14 @@ function createGetter(isReadonly = false, shallow = false) {
     }
 
     // ! reactive 和 readonly 嵌套对象实现
-    // 判断 res 是不是一个 object
+    // 判断 Reflect.get(target, key) 返回的 res 是不是一个 object
+    // 如果是一个对象，则要进行递归处理，让对象里面的属性也变成响应式。
     if (isObject(res)) {
       return isReadonly ? readonly(res) : reactive(res);
     }
 
     // ! 使用 isReadonly 入参来判断是 reactive 还是 readonly
+    // 如果对象是只读的，说明无法被修改，那么就不用进行依赖收集了
     if (!isReadonly) {
       // 如果不是 readonly
       // ! 依赖收集

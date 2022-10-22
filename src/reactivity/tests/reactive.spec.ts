@@ -16,6 +16,7 @@ describe("reactive", () => {
   });
 
   it('nested reactive', () => {
+    // 嵌套的 reactive
     const original = {
       nested: {
         foo: 1,
