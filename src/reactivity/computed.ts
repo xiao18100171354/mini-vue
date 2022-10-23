@@ -1,4 +1,4 @@
-import { ReactiveEffect } from "./effect";
+import { effect, ReactiveEffect } from "./effect";
 
 class ComputedRefImpl {
   private _getter;
@@ -8,14 +8,24 @@ class ComputedRefImpl {
   constructor(getter) {
     this._getter = getter;
 
-    // this._effect = effect(); // 这里我们不能直接使用 effect()
+    // 这里我们不能直接使用 effect()
+    // 因为 effect 函数会在调用的时候立即执行 getter，不符合 compute lazily 特性
+    // this._effect = effect(getter, {
+    //   scheduler: () => {
+    //     if (!this._dirty) {
+    //       this._dirty = true;
+    //     }
+    //   },
+    // });
+
+    // 而是使用 effect 底层的 ReactiveEffect 类，因为我们要做一些别的处理
     this._effect = new ReactiveEffect(getter, () => {
       // ! 利用 ReactiveEffect 的第二个参数 scheduler，来做一个功能，就是当响应式依赖对象的值被重新赋值时，不会再去执行第一个参数 fn，而是执行 scheduler
       // ! computed 这里的 scheduler 回调函数的逻辑是，当 _dirty 为 false 时，把它重置为 true。这样
       if (!this._dirty) {
         this._dirty = true;
       }
-    }); // 而是使用 effect 底层的 ReactiveEffect 类，因为我们要做一些别的处理
+    });
   }
 
   get value() {
@@ -26,7 +36,7 @@ class ComputedRefImpl {
     if (this._dirty) {
       this._dirty = false;
       // this._value =  this._getter();
-      this._value =  this._effect.run();
+      this._value = this._effect.run();
     }
 
     return this._value;
