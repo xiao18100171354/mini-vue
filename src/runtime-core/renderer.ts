@@ -1,4 +1,4 @@
-import { isObject } from "../shared";
+import { isObject } from "../shared/index";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 import { Fragment, Text } from "./vnode";
@@ -10,8 +10,7 @@ export function render(vnode, container) {
   patch(vnode, container);
 }
 
-function patch(vnode, container) {
-  debugger
+function patch(vnode, container, parentComponent) {
   // ShapeFlags
   // vnode -> flag
   const { type, shapeFlags } = vnode;
@@ -32,7 +31,7 @@ function patch(vnode, container) {
   switch (type) {
     case Fragment:
       // Fragment 类型 -> 只需要渲染 children 即可
-      processFragment(vnode, container);
+      processFragment(vnode, container, parentComponent);
       break;
 
     case Text:
@@ -42,12 +41,12 @@ function patch(vnode, container) {
 
     default:
       // 通过 ShapeFlags 改在判断代码
-      if (shapeFlags & ShapeFlags.ELEMENT) {  
+      if (shapeFlags & ShapeFlags.ELEMENT) {
         // type => div p span 等等 html 标签
-        processElement(vnode, container);
+        processElement(vnode, container, parentComponent);
       } else if (shapeFlags & ShapeFlags.STATEFUL_COMPONENT) {
         // type => 组件类型, App Foo 等
-        processComponent(vnode, container);
+        processComponent(vnode, container, parentComponent);
       }
       break;
   }
@@ -61,17 +60,17 @@ function processText(vnode: any, container: any) {
   container.append(textNode);
 }
 
-function processFragment(vnode: any, container: any) {
+function processFragment(vnode: any, container: any, parentComponent) {
   // 只需要处理 children
-  mountChildren(vnode.children, container);
+  mountChildren(vnode.children, container, parentComponent);
 }
 
 // 处理元素入口方法
-function processElement(vnode: any, container: any) {
-  mountElement(vnode, container);
+function processElement(vnode: any, container: any, parentComponent) {
+  mountElement(vnode, container, parentComponent);
 }
 
-function mountElement(vnode: any, container: any) {
+function mountElement(vnode: any, container: any, parentComponent) {
   const { children, props, type, shapeFlags } = vnode;
   const el = document.createElement(type);
   vnode.el = el;
@@ -90,7 +89,7 @@ function mountElement(vnode: any, container: any) {
   if (shapeFlags & ShapeFlags.TEXT_CHILDREN) {
     el.textContent = children;
   } else if (shapeFlags & ShapeFlags.ARRAY_CHILDREN) {
-    mountChildren(children, el);
+    mountChildren(children, el, parentComponent);
   }
 
   // 处理属性
@@ -113,21 +112,21 @@ function mountElement(vnode: any, container: any) {
   container.append(el);
 }
 
-function mountChildren(vnode, container) {
+function mountChildren(vnode, container, parentComponent) {
   vnode.forEach((child) => {
-    patch(child, container);
+    patch(child, container, parentComponent);
   });
 }
 
 // 处理组件入口方法
-function processComponent(vnode: any, container: any) {
+function processComponent(vnode: any, container: any, parentComponent) {
   // 挂载组件
-  mountComponent(vnode, container);
+  mountComponent(vnode, container, parentComponent);
 }
 
-function mountComponent(initialVNode: any, container) {
+function mountComponent(initialVNode: any, container, parentComponent) {
   // 1. 创建组件实例, 为组件实例声明 setupStatus，props，slots，emit 等属性
-  const instance = createComponentInstance(initialVNode);
+  const instance = createComponentInstance(initialVNode, parentComponent);
   // 2. 处理组件实例，初始化组件的 props slots setupStatus
   setupComponent(instance);
   // 3.
@@ -144,7 +143,7 @@ function setupRenderEffect(instance: any, initialVNode, container) {
   // vnode element -> mountElement();
 
   console.log("container", container);
-  patch(subTree, container);
+  patch(subTree, container, instance);
 
   // 所有的 element 都已经处理完成
 

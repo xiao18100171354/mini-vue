@@ -83,7 +83,7 @@ export function trackEffects(dep) {
   if (dep.has(activeEffect)) return;
 
   // 把 effect 添加到 dep 里实现依赖收集，那么到这一步就已经结束了依赖收集的动作
-  dep.add(activeEffect); 
+  dep.add(activeEffect);
 
   // 这里是反向收集依赖,用于 stop 功能
   activeEffect.deps.push(dep);

@@ -17,7 +17,7 @@ class RefImpl {
     // 在 ref 实现中,如果 value 是一个对象, 则需要把 value 转换成 reactive
     // 1. 看看 value 是不是对象
     this._value = convert(value);
-    this.dep = new Set();
+    this.dep = new Set(); // 用于依赖收集
   }
 
   get value() {
@@ -38,6 +38,7 @@ class RefImpl {
 }
 
 function convert(value) {
+  // 如果 RefImpl 接收的参数是一个对象，则需要用 reactive 进行处理一下
   return isObject(value) ? reactive(value) : value;
 }
 
