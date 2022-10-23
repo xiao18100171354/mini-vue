@@ -7,7 +7,7 @@ export function render(vnode, container) {
   // render 函数其实就干了一件事情，就是调用 patch() 方法
   // patch() 方便后续进行递归的处理
 
-  patch(vnode, container);
+  patch(vnode, container, null);
 }
 
 function patch(vnode, container, parentComponent) {
