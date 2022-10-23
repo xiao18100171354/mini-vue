@@ -14,6 +14,7 @@ export function provide(key, value) {
     if (provides === parentProvides) {
       // 只需要赋值一次够了
       // 因为如果第二次调用 provide() 的时候还要创建一个以 parentProvides 为原型的对象,那么第一次 provides 又会被重置导致第一次赋值的 key 就没有了
+      // 通过原型链的方式实现
       provides = currentInstance.provides = Object.create(parentProvides);
     }
 
@@ -23,8 +24,10 @@ export function provide(key, value) {
 
 export function inject(key, defaultValue) {
   // 取
+  // 作用域同 provide
   const currentInstance: any = getCurrentInstance();
   if (currentInstance) {
+    // inject 取的 key 至少是从父级组件通过 provide 提供
     const parentProvides = currentInstance.parent.provides;
 
     if (key in parentProvides) {
