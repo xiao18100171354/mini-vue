@@ -10,6 +10,8 @@ export function createRenderer(options) {
     createElement: hostCreateElement,
     patchProps: hostPatchProps,
     insert: hostInsert,
+    remove: hostRemove,
+    setElementText: hostSetElementText,
   } = options;
 
   function render(vnode, container) {
@@ -81,27 +83,66 @@ export function createRenderer(options) {
     if (!n1) {
       mountElement(n2, container, parentComponent);
     } else {
-      patchElement(n1, n2, container);
+      patchElement(n1, n2, container, parentComponent);
     }
   }
 
-  function patchElement(n1, n2, container) {
+  function patchElement(n1, n2, container, parentComponent) {
     console.log("patchElement");
     console.log("n1", n1);
     console.log("n2", n2);
-
-    // props
-    const oldProps = n1.props || EMPTY_OBJ;
-    const newProps = n2.props || EMPTY_OBJ;
-
     // el 可以从 n1 上去获取，因为在 mountElement 做处理的时候，会为 n1 添加 el属性，
     // 但是 n2 不会通过 mountElement 处理，所以没办法添加 el 属性
     // 所以 n2 添加 el 属性的时间点就是在 patchElement 的时候，把 n1.el => n2.el
     const el = n1.el;
     n2.el = n1.el;
-    patchProps(el, oldProps, newProps);
 
     // children
+    patchChildren(n1, n2, el,parentComponent);
+
+    // props
+    const oldProps = n1.props || EMPTY_OBJ;
+    const newProps = n2.props || EMPTY_OBJ;
+
+    patchProps(el, oldProps, newProps);
+  }
+
+  function patchChildren(n1, n2, container, parentComponent) {
+    const prevShapeFlag = n1.shapeFlags;
+    const c1 = n1.children;
+    const { shapeFlags } = n2;
+    const c2 = n2.children;
+    if (shapeFlags & ShapeFlags.TEXT_CHILDREN) {
+      // new text
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 1. 把老的 children 清空
+        unmountChildren(n1.children);
+        // 2. 设置成新的 text
+        hostSetElementText(container, c2);
+      } else {
+        if (c1 !== c2) {
+          hostSetElementText(container, c2);
+        }
+      }
+    } else {
+      // new array
+      if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+        // 1. 清空旧的文本
+        hostSetElementText(container, "");
+        // 2. 挂载新的 array children 
+        mountChildren(c2, container, parentComponent)
+      } else{
+        console.log(222)
+      }
+    }
+  }
+
+  function unmountChildren(children) {
+    for (let i = 0; i < children.length; i++) {
+      const el = children[i].el;
+      // remove
+      hostRemove(el);
+    }
   }
 
   function patchProps(el, oldProps, newProps) {
@@ -171,8 +212,8 @@ export function createRenderer(options) {
     hostInsert(el, container);
   }
 
-  function mountChildren(vnode, container, parentComponent) {
-    vnode.forEach((child) => {
+  function mountChildren(children, container, parentComponent) {
+    children.forEach((child) => {
       patch(null, child, container, parentComponent);
     });
   }
