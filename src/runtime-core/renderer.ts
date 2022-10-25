@@ -1,5 +1,5 @@
 import { effect } from "../reactivity/effect";
-import { isObject } from "../shared/index";
+import { EMPTY_OBJ, isObject } from "../shared/index";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 import { createAppAPI } from "./createApp";
@@ -91,7 +91,38 @@ export function createRenderer(options) {
     console.log("n2", n2);
 
     // props
+    const oldProps = n1.props || EMPTY_OBJ;
+    const newProps = n2.props || EMPTY_OBJ;
+
+    // el 可以从 n1 上去获取，因为在 mountElement 做处理的时候，会为 n1 添加 el属性，
+    // 但是 n2 不会通过 mountElement 处理，所以没办法添加 el 属性
+    // 所以 n2 添加 el 属性的时间点就是在 patchElement 的时候，把 n1.el => n2.el
+    const el = n1.el;
+    n2.el = n1.el;
+    patchProps(el, oldProps, newProps);
+
     // children
+  }
+
+  function patchProps(el, oldProps, newProps) {
+    if (oldProps !== newProps) {
+      for (const key in newProps) {
+        const prevProp = oldProps[key];
+        const nextProp = newProps[key];
+
+        if (prevProp !== nextProp) {
+          hostPatchProps(el, key, prevProp, nextProp);
+        }
+      }
+
+      if (oldProps !== EMPTY_OBJ) {
+        for (const key in oldProps) {
+          if (!(key in newProps)) {
+            hostPatchProps(el, key, oldProps[key], null);
+          }
+        }
+      }
+    }
   }
 
   function mountElement(vnode: any, container: any, parentComponent) {
@@ -133,7 +164,7 @@ export function createRenderer(options) {
       //   el.setAttribute(key, val);
       // }
 
-      hostPatchProps(el, key, val);
+      hostPatchProps(el, key, null, val);
     }
 
     // container.append(el);
