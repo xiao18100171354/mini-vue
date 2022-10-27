@@ -8,6 +8,7 @@ export function createVNode(type, props?, children?) {
     type,
     props,
     children,
+    key: props && props.key,
     shapeFlags: getShapeFlag(type), // 用来判断组件是什么类型
     el: null, // 组件的元素
   };
