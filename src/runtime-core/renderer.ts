@@ -73,13 +73,25 @@ export function createRenderer(options) {
     container.append(textNode);
   }
 
-  function processFragment(n1, n2: any, container: any, parentComponent, anchor) {
+  function processFragment(
+    n1,
+    n2: any,
+    container: any,
+    parentComponent,
+    anchor
+  ) {
     // 只需要处理 children
     mountChildren(n2.children, container, parentComponent, anchor);
   }
 
   // 处理元素入口方法
-  function processElement(n1, n2: any, container: any, parentComponent, anchor) {
+  function processElement(
+    n1,
+    n2: any,
+    container: any,
+    parentComponent,
+    anchor
+  ) {
     if (!n1) {
       mountElement(n2, container, parentComponent, anchor);
     } else {
@@ -138,7 +150,13 @@ export function createRenderer(options) {
     }
   }
 
-  function patchKeyedChildren(c1, c2, container, parentComponent, parentAnchor) {
+  function patchKeyedChildren(
+    c1,
+    c2,
+    container,
+    parentComponent,
+    parentAnchor
+  ) {
     const l2 = c2.length;
     let i = 0; // 声明变量表示新数组 c2 的第一个 children
     let e1 = c1.length - 1; // 声明变量表示旧数组 c1 的最后一个 children
@@ -180,20 +198,107 @@ export function createRenderer(options) {
     }
 
     // 新的比老的多 - 创建
-    if (i > e1 ) {
+    if (i > e1) {
       if (i <= e2) {
         // const nextPos = i + 1;
         const nextPos = e2 + 1;
         const anchor = nextPos < l2 ? c2[nextPos].el : null;
         while (i <= e2) {
           patch(null, c2[i], container, parentComponent, anchor);
-          i++; 
+          i++;
         }
       }
     } else if (i > e2) {
       while (i <= e1) {
         hostRemove(c1[i].el);
         i++;
+      }
+    } else {
+      // 中间对比
+      let s1 = i; // 老节点的需要对比的元素的开始索引
+      let s2 = i; // 新节点的需要对比的元素的开始索引
+
+      const toBePatched = e2 - s2 + 1;
+      let patched = 0;
+
+      // 建立 key 和 child 的映射关系
+      const keyToNewIndexMap = new Map();
+      // 创建一个定长的数组来存放新老节点的映射关系
+      const newIndexToOldIndex = new Array(toBePatched);
+      let moved = false;
+      let maxNewIndexSoFar = 0;
+      // 初始化映射表
+      for (let i = 0; i < toBePatched; i++) {
+        newIndexToOldIndex[i] = 0;
+      }
+
+      for (let i = s2; i <= e2; i++) {
+        const nextChild = c2[i];
+        keyToNewIndexMap.set(nextChild.key, i);
+      }
+
+      for (let i = s1; i <= e1; i++) {
+        const prevChild = c1[i];
+
+        if (patched >= toBePatched) {
+          hostRemove(prevChild.el);
+
+          continue; // 停止当前循环，立刻进行下一次循环
+        }
+
+        // null undefined
+        let newIndex; // 如果老的里面的节点在新的节点里，声明变量来存放它在新的里面的索引，否则就为 undefined
+        if (prevChild.key !== null) {
+          newIndex = keyToNewIndexMap.get(prevChild.key);
+        } else {
+          // for (let j = s2; j <= e2; j++) {
+          for (let j = s2; j <= e2; j++) {
+            if (isSameVNodeType(prevChild, c2[j])) {
+              newIndex = j;
+
+              break; // 跳出当前循环
+            }
+          }
+        }
+
+        if (newIndex === undefined) {
+          // 不在新的节点，删除
+          hostRemove(prevChild.el);
+        } else {
+          if (newIndex >= maxNewIndexSoFar) {
+            maxNewIndexSoFar = newIndex;
+          } else {
+            moved = true;
+          }
+
+          newIndexToOldIndex[newIndex - s2] = i + 1; // 加1是为了避免 i 为 0 的情况，因为0在后续中有用
+          patch(prevChild, c2[newIndex], container, parentComponent, null);
+          patched++;
+        }
+      }
+
+      const increasingNewIndexSequence = moved
+        ? getSequence(newIndexToOldIndex)
+        : [];
+      let j = increasingNewIndexSequence.length - 1; // 最长递增子序列的指针
+
+      for (let i = toBePatched - 1; i >= 0; i--) {
+        const nextIndex = i + s2;
+        const nextChild = c2[nextIndex];
+        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
+
+        if (newIndexToOldIndex[i] === 0) {
+          // 中间对比 - 创建
+          patch(null, nextChild, container, parentComponent, anchor);
+        } else if (moved) {
+          // 中间对比 - 移动
+          if (j < 0 || i !== increasingNewIndexSequence[j]) {
+            console.log("移动位置");
+            hostInsert(nextChild.el, container, anchor);
+          } else {
+            j--;
+          }
+        }
       }
     }
   }
@@ -280,12 +385,23 @@ export function createRenderer(options) {
   }
 
   // 处理组件入口方法
-  function processComponent(n1, n2: any, container: any, parentComponent, anchor) {
+  function processComponent(
+    n1,
+    n2: any,
+    container: any,
+    parentComponent,
+    anchor
+  ) {
     // 挂载组件
     mountComponent(n2, container, parentComponent, anchor);
   }
 
-  function mountComponent(initialVNode: any, container, parentComponent, anchor) {
+  function mountComponent(
+    initialVNode: any,
+    container,
+    parentComponent,
+    anchor
+  ) {
     // 1. 创建组件实例, 为组件实例声明 setupStatus，props，slots，emit 等属性
     const instance = createComponentInstance(initialVNode, parentComponent);
     // 2. 处理组件实例，初始化组件的 props slots setupStatus
@@ -340,4 +456,46 @@ export function createRenderer(options) {
   return {
     createApp: createAppAPI(render),
   };
+}
+
+// 最长递增子序列算法
+function getSequence(arr: number[]): number[] {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
 }
