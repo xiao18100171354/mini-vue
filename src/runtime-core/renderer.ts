@@ -2,6 +2,7 @@ import { effect } from "../reactivity/effect";
 import { EMPTY_OBJ, isObject } from "../shared/index";
 import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
+import { shouldUpdateComponent } from "./componentUpdateUtils";
 import { createAppAPI } from "./createApp";
 import { Fragment, Text } from "./vnode";
 
@@ -408,7 +409,23 @@ export function createRenderer(options) {
     anchor
   ) {
     // 挂载组件
-    mountComponent(n2, container, parentComponent, anchor);
+    if (!n1) {
+      mountComponent(n2, container, parentComponent, anchor);
+    } else {
+      updateCompoent(n1, n2);
+    }
+  }
+
+  function updateCompoent(n1, n2) {
+    const instance = n1.component;
+    n2.component = n1.component;
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2;
+      instance.update();
+    } else {
+      n2.el = n1.el;
+      instance.vnode = n2;
+    }
   }
 
   function mountComponent(
@@ -419,6 +436,7 @@ export function createRenderer(options) {
   ) {
     // 1. 创建组件实例, 为组件实例声明 setupStatus，props，slots，emit 等属性
     const instance = createComponentInstance(initialVNode, parentComponent);
+    initialVNode.component = instance;
     // 2. 处理组件实例，初始化组件的 props slots setupStatus
     setupComponent(instance);
     // 3.
@@ -429,7 +447,7 @@ export function createRenderer(options) {
     // 利用 effect 进行依赖收集
     // 组件的 render 函数，会使用响应式对象中的属性
     // 这时候把逻辑放到 effect 中，就可以当响应式对象属性触发 get 时进行依赖收集，set 时触发依赖
-    effect(() => {
+    instance.update = effect(() => {
       //  通过在组件实例 instance 对象上声明一个变量 isMounted 来判断组件是否已经挂载过
       if (!instance.isMounted) {
         // 没有挂载过，初始化
@@ -458,6 +476,13 @@ export function createRenderer(options) {
         // 已经挂载过了，需要更新
         console.log("update");
 
+        // 更新组件的 props
+        const { next, vnode } = instance; // next 是马上要更新的，vnode 是更新之前的
+        if (next) {
+          next.el = vnode.el;
+          updateComponentPreRender(instance, next);
+        }
+
         const { proxy } = instance;
         const subTree = instance.render.call(proxy);
         const preSubTree = instance.subTree;
@@ -471,6 +496,13 @@ export function createRenderer(options) {
   return {
     createApp: createAppAPI(render),
   };
+}
+
+function updateComponentPreRender(instance, nextVNode) {
+  instance.vnode = nextVNode;
+  instance.next = null;
+
+  instance.props = nextVNode.props;
 }
 
 // 最长递增子序列算法
