@@ -197,6 +197,7 @@ export function createRenderer(options) {
       e2--;
     }
 
+    // 经过上面的双端对比，结果产生一个缩小范围的需要真的进行处理的范围
     // 新的比老的多 - 创建
     if (i > e1) {
       if (i <= e2) {
@@ -218,8 +219,8 @@ export function createRenderer(options) {
       let s1 = i; // 老节点的需要对比的元素的开始索引
       let s2 = i; // 新节点的需要对比的元素的开始索引
 
-      const toBePatched = e2 - s2 + 1;
-      let patched = 0;
+      const toBePatched = e2 - s2 + 1; // 记录需要对比的节点数量
+      let patched = 0; // 记录当前已经对比了几个节点，如果 patched >=
 
       // 建立 key 和 child 的映射关系
       const keyToNewIndexMap = new Map();
@@ -227,20 +228,29 @@ export function createRenderer(options) {
       const newIndexToOldIndex = new Array(toBePatched);
       let moved = false;
       let maxNewIndexSoFar = 0;
+
       // 初始化映射表
+      // 为每个索引值都初始化一个0，表示还没有建立映射关系
       for (let i = 0; i < toBePatched; i++) {
         newIndexToOldIndex[i] = 0;
       }
 
       for (let i = s2; i <= e2; i++) {
         const nextChild = c2[i];
+
+        // 把节点的 key 属性和节点在 children 里的索引建立映射关系
         keyToNewIndexMap.set(nextChild.key, i);
       }
 
+      // 循环遍历老数据，如果老数组中的节点不在新数组中，则直接删除
+      // 如果在新数组中，先从 keyToNewIndexMap 找出它在新数组中的索引位置，然后再进行 patch() 更新
+      // 也会后续的移动节点做准备
       for (let i = s1; i <= e1; i++) {
+        // 先把老 children 中对应索引位置的节点取出来用变量保存起来
         const prevChild = c1[i];
 
         if (patched >= toBePatched) {
+          // 如果已经对比节点树大于等于需要对比的节点数，那么就说明老的比新的多一些节点，需要删除
           hostRemove(prevChild.el);
 
           continue; // 停止当前循环，立刻进行下一次循环
@@ -249,9 +259,11 @@ export function createRenderer(options) {
         // null undefined
         let newIndex; // 如果老的里面的节点在新的节点里，声明变量来存放它在新的里面的索引，否则就为 undefined
         if (prevChild.key !== null) {
+          // 如果老节点有 key，那么直接从 keyToNewIndexMap get
           newIndex = keyToNewIndexMap.get(prevChild.key);
         } else {
-          // for (let j = s2; j <= e2; j++) {
+          // 如果没有 key，则循环遍历 新数据中需要中间对比的范围，看看范围内有没有它
+          // for (let j = s2; j < e2; j++) {
           for (let j = s2; j <= e2; j++) {
             if (isSameVNodeType(prevChild, c2[j])) {
               newIndex = j;
@@ -262,7 +274,8 @@ export function createRenderer(options) {
         }
 
         if (newIndex === undefined) {
-          // 不在新的节点，删除
+          // 经过上述的两个判断，如果 newIndex 还是 undefined
+          // 说明不在新的节点内，直接删除
           hostRemove(prevChild.el);
         } else {
           if (newIndex >= maxNewIndexSoFar) {
@@ -270,8 +283,9 @@ export function createRenderer(options) {
           } else {
             moved = true;
           }
+          newIndexToOldIndex[newIndex - s2] = i + 1; // 加 1 是为了避免 i 为 0 的情况，因为0在后续中有用
 
-          newIndexToOldIndex[newIndex - s2] = i + 1; // 加1是为了避免 i 为 0 的情况，因为0在后续中有用
+          // 如果老的节点在新的节点中存在，那么就进行 patch
           patch(prevChild, c2[newIndex], container, parentComponent, null);
           patched++;
         }
@@ -279,13 +293,14 @@ export function createRenderer(options) {
 
       const increasingNewIndexSequence = moved
         ? getSequence(newIndexToOldIndex)
-        : [];
-      let j = increasingNewIndexSequence.length - 1; // 最长递增子序列的指针
+        : []; // 获取最长递增子序列
+      let j = increasingNewIndexSequence.length - 1; // 最长递增子序列的指针，从末尾开始
 
+      // 也是从末尾开始进行节点移动
       for (let i = toBePatched - 1; i >= 0; i--) {
         const nextIndex = i + s2;
         const nextChild = c2[nextIndex];
-        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null;
+        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : null; // 获取锚点位置，用于要移动节点的参考节点
 
         if (newIndexToOldIndex[i] === 0) {
           // 中间对比 - 创建

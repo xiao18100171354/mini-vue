@@ -80,6 +80,7 @@ import { ref, h } from "../../lib/guide-mini-vue.esm.js";
 // a b (e c) f g
 // D 节点在新的里面没有的 - 需要删除掉
 // C 节点的 props 也发生了变化
+// 删除D，再添加E，不需要移动元素
 // const prevChildren = [
 //   h("div", { key: "A" }, "A"),
 //   h("div", { key: "B" }, "B"),
@@ -123,24 +124,24 @@ import { ref, h } from "../../lib/guide-mini-vue.esm.js";
 // 中间部分，移动逻辑
 // a b (c d e) f g
 // a b (e c d) f g
-// const prevChildren = [
-//   h("div", { key: "A" }, "A"),
-//   h("div", { key: "B" }, "B"),
-//   h("div", { key: "C", id: "c-prev" }, "C"),
-//   h("div", { key: "D" }, "D"),
-//   h("div", { key: "E" }, "E"),
-//   h("div", { key: "F" }, "F"),
-//   h("div", { key: "G" }, "G"),
-// ];
-// const nextChildren = [
-//   h("div", { key: "A" }, "A"),
-//   h("div", { key: "B" }, "B"),
-//   h("div", { key: "E" }, "E"),
-//   h("div", { key: "C", id: "c-next" }, "C"),
-//   h("div", { key: "D" }, "D"),
-//   h("div", { key: "F" }, "F"),
-//   h("div", { key: "G" }, "G"),
-// ];
+const prevChildren = [
+  h("div", { key: "A" }, "A"),
+  h("div", { key: "B" }, "B"),
+  h("div", { key: "C", id: "c-prev" }, "C"),
+  h("div", { key: "D" }, "D"),
+  h("div", { key: "E" }, "E"),
+  h("div", { key: "F" }, "F"),
+  h("div", { key: "G" }, "G"),
+];
+const nextChildren = [
+  h("div", { key: "A" }, "A"),
+  h("div", { key: "B" }, "B"),
+  h("div", { key: "E" }, "E"),
+  h("div", { key: "C", id: "c-next" }, "C"),
+  h("div", { key: "D" }, "D"),
+  h("div", { key: "F" }, "F"),
+  h("div", { key: "G" }, "G"),
+];
 
 
 // 7.3 
@@ -168,26 +169,26 @@ import { ref, h } from "../../lib/guide-mini-vue.esm.js";
 
 // 8. 综合例子
 // 
-const prevChildren = [
-  h("div", { key: "A" }, "A"),
-  h("div", { key: "B" }, "B"),
-  h("div", { key: "C" }, "C"),
-  h("div", { key: "D" }, "D"),
-  h("div", { key: "E" }, "E"),
-  h("div", { key: "Z" }, "Z"),
-  h("div", { key: "F" }, "F"),
-  h("div", { key: "G" }, "G"),
-];
-const nextChildren = [
-  h("div", { key: "A" }, "A"),
-  h("div", { key: "B" }, "B"),
-  h("div", { key: "D" }, "D"),
-  h("div", { key: "C" }, "C"),
-  h("div", { key: "Y" }, "Y"),
-  h("div", { key: "E" }, "E"),
-  h("div", { key: "F" }, "F"),
-  h("div", { key: "G" }, "G"),
-];
+// const prevChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "C" }, "C"),
+//   h("div", { key: "D" }, "D"),
+//   h("div", { key: "E" }, "E"),
+//   h("div", { key: "Z" }, "Z"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
+// const nextChildren = [
+//   h("div", { key: "A" }, "A"),
+//   h("div", { key: "B" }, "B"),
+//   h("div", { key: "D" }, "D"),
+//   h("div", { key: "C" }, "C"),
+//   h("div", { key: "Y" }, "Y"),
+//   h("div", { key: "E" }, "E"),
+//   h("div", { key: "F" }, "F"),
+//   h("div", { key: "G" }, "G"),
+// ];
 
 export default {
   name: "ArrayToArray",
