@@ -32,7 +32,8 @@ export default {
         msg: this.msg,
       }),
       h("button", { onClick: this.changeCount }, "change self count"),
-      h("p", {}, this.count),
+      h("p", {}, "count: " + this.count),
+      // h("p", {}, this.count),
     ]);
   },
 };
