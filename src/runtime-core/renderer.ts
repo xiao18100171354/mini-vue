@@ -4,6 +4,7 @@ import { ShapeFlags } from "../shared/ShapeFlags";
 import { createComponentInstance, setupComponent } from "./component";
 import { shouldUpdateComponent } from "./componentUpdateUtils";
 import { createAppAPI } from "./createApp";
+import { queueJobs } from "./scheduler";
 import { Fragment, Text } from "./vnode";
 
 export function createRenderer(options) {
@@ -489,6 +490,17 @@ export function createRenderer(options) {
         instance.subTree = subTree; // 把最新的虚拟节点树赋值给 subTree
 
         patch(preSubTree, subTree, container, instance, anchor);
+      }
+    }, {
+      scheduler() {
+        // 实现 nextTick 功能
+        // 在响应式对象更新的时候，不要立即触发依赖
+        // 而是通过一个容器收集这些更新job
+        // 然后通过微任务的方式，当宏任务全部更新之后
+        // 执行微任务来进行视图的更新
+        console.log("update - scheduler")
+
+        queueJobs(instance.update);
       }
     });
   }
