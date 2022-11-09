@@ -29,9 +29,33 @@ function parseChildren(context) {
     }
   }
 
+  if (!node) {
+    node = parseText(context);
+  }
+
   nodes.push(node);
 
   return nodes;
+}
+
+function parseText(context: any) {
+  // 1. 获取content
+  const content = parseTextData(context, context.source.length);
+
+  console.log("context.source", context.source)
+
+  return {
+    type: NodeTypes.TEXT,
+    content,
+  }
+}
+
+function parseTextData(context: any, length) {
+  const content = context.source.slice(0, length);
+
+  // 2. 推进
+  advanceBy(context, length);
+  return content;
 }
 
 function parseElement(context) {
@@ -43,10 +67,10 @@ function parseElement(context) {
   return element;
 }
 
-function parseTag(context: any, type:TagType) {
+function parseTag(context: any, type: TagType) {
   const match: any = /^<\/?([a-z]*)/i.exec(context.source);
   console.log(match);
-  const tag = match[1]; 
+  const tag = match[1];
 
   // 2. 删除处理完成后的代码
   advanceBy(context, match[0].length);
@@ -79,11 +103,11 @@ function parseInterpolation(context) {
   const rawContentLength = closeIndex - openDelimiter.length;
 
   // ' message }}' => ' message '
-  const rawContent = context.source.slice(0, rawContentLength);
+  const rawContent = parseTextData(context, rawContentLength);
   // ' message ' => 'message'
   const content = rawContent.trim();
 
-  advanceBy(context, rawContentLength + closeDelimiter.length);
+  // advanceBy(context, rawContentLength + closeDelimiter.length);
 
   return {
     type: NodeTypes.INTERPOLATION,
