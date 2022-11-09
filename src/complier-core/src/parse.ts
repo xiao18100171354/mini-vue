@@ -1,5 +1,10 @@
 import { NodeTypes } from "./ast";
 
+const enum TagType {
+  Start,
+  End,
+}
+
 export function baseParse(content: string) {
   const context = createParserContext(content);
 
@@ -10,15 +15,49 @@ function parseChildren(context) {
   const nodes: any = [];
 
   let node;
-  if (context.source.startsWith("{{")) {
+
+  const s = context.source;
+  if (s.startsWith("{{")) {
     // 如果内容字符串以`{{`开头
-    // 则
+    // 则进行解析插值表达式
     node = parseInterpolation(context);
+  } else if (s[0] === "<") {
+    // 如果内容以`<`开头
+    if (/[a-z]/i.test(s[1])) {
+      // 并且第一个字符是在 a-z 之间，那么我们就认为是 element 类型
+      node = parseElement(context);
+    }
   }
 
   nodes.push(node);
 
   return nodes;
+}
+
+function parseElement(context) {
+  // 1. 解析 tag
+  const element = parseTag(context, TagType.Start);
+
+  parseTag(context, TagType.End);
+
+  return element;
+}
+
+function parseTag(context: any, type:TagType) {
+  const match: any = /^<\/?([a-z]*)/i.exec(context.source);
+  console.log(match);
+  const tag = match[1]; 
+
+  // 2. 删除处理完成后的代码
+  advanceBy(context, match[0].length);
+  advanceBy(context, 1);
+
+  if (type === TagType.End) return;
+
+  return {
+    type: NodeTypes.ELEMENT,
+    tag,
+  };
 }
 
 function parseInterpolation(context) {
@@ -32,7 +71,7 @@ function parseInterpolation(context) {
     closeDelimiter,
     openDelimiter.length
   );
-  
+
   // '{{ message }}' => ' message }}'
   advanceBy(context, openDelimiter.length);
 
