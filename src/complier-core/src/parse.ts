@@ -75,8 +75,6 @@ function parseText(context: any) {
   // 1. 获取content
   const content = parseTextData(context, endIndex);
 
-  console.log("context -----------", context.source);
-
   return {
     type: NodeTypes.TEXT,
     content,
