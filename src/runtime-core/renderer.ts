@@ -457,7 +457,7 @@ export function createRenderer(options) {
         // 在 setupStatusfulComponent() 执行时，会对组件 setup 函数返回的对象进行 Proxy 代理，并且添加到组件实例 instance 的 proxy 属性
         const { proxy } = instance;
         // 准备就绪，调用实例instance的render函数，也就是组件的render函数，并且直接绑定render函数的this指向上述的代理对象（这样就可以通过 this 访问 setup 函数返回对象的属性和属性值）
-        const subTree = instance.render.call(proxy); // subTree 是虚拟节点树
+        const subTree = instance.render.call(proxy, proxy); // subTree 是虚拟节点树
         // 保存当前虚拟节点，后续更新节点时有用
         instance.subTree = subTree;
         console.log("subTree", subTree);
@@ -485,7 +485,7 @@ export function createRenderer(options) {
         }
 
         const { proxy } = instance;
-        const subTree = instance.render.call(proxy);
+        const subTree = instance.render.call(proxy, proxy);
         const preSubTree = instance.subTree;
         instance.subTree = subTree; // 把最新的虚拟节点树赋值给 subTree
 

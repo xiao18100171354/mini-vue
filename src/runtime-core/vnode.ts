@@ -3,6 +3,8 @@ import { ShapeFlags } from "../shared/ShapeFlags";
 export const Fragment = Symbol("Fragment");
 export const Text = Symbol("Text");
 
+export { createVNode as createElementVNode };
+
 export function createVNode(type, props?, children?) {
   const vnode = {
     type,
@@ -13,7 +15,6 @@ export function createVNode(type, props?, children?) {
     shapeFlags: getShapeFlag(type), // 用来判断组件是什么类型
     el: null, // 组件的元素
   };
-  
 
   // 额外处理 vnode 的类型
   if (typeof children === "string") {
@@ -30,7 +31,6 @@ export function createVNode(type, props?, children?) {
 
   return vnode;
 }
-
 
 export function createTextVNode(text) {
   return createVNode(Text, {}, text);
